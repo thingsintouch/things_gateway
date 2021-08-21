@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_things_ras_user,things_ras_user,model_things_ras2,things_ras_group_user,1,0,0,0
+access_things_ras_admin,things_ras_admin,model_things_ras2,things_ras_group_manager,1,1,1,1
+access_things_route_user,things_route_user,model_things_route,things_ras_group_user,1,0,0,0
+access_things_route_admin,things_route_admin,model_things_route,things_ras_group_manager,1,1,1,1

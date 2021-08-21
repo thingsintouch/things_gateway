@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="module_things_ras_category" model="ir.module.category">
+        <field name="name">Things RAS</field>
+    </record>
+
+    <!-- Things RAS User Group -->
+    <record id="things_ras_group_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id"
+        ref="module_things_ras_category"/>
+        <!-- <field name="implied_ids"
+        eval="[(4, ref('base.group_user'))]"/> -->
+    </record>
+
+    <!-- Things RAS Manager Group -->
+    <record id="things_ras_group_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="category_id"
+        ref="module_things_ras_category"/>
+        <!-- <field name="implied_ids"
+        eval="[(4, ref('things_ras_group_user'))]"/>
+        <field name="users"
+        eval="[(4, ref('base.user_root')),
+        (4, ref('base.user_admin'))]"/> -->
+    </record>
+
+    <record id="group_things_ras" model="res.groups">
+        <field name="name">Things RAS</field>
+        <field name="category_id" ref="module_things_ras_category"/>
+    </record>
+</odoo>
