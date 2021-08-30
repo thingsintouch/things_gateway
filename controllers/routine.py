@@ -5,6 +5,20 @@ import json
 
 _logger = logging.getLogger(__name__)
 
+display_messages = [
+    "card_registered",
+    "too_little_time_between_clockings"
+    ]
+
+keys_routine_call = [
+    "setRebootAt",
+    'shouldGetFirmwareUpdate',
+    'location',
+    'shutdownTerminal',
+    'tz',
+    'time_format'
+    ]
+
 def answerRas2routineQuestion(routeTo, data, answer):
     try:
         Ras2Model = http.request.env['things.ras2']
@@ -34,14 +48,8 @@ def answerRas2routineQuestion(routeTo, data, answer):
                         'incrementalLog' : new_inc_log,               
                 })
 
-            list_of_params_to_include_in_answer = [ \
-                "setRebootAt",
-                'shouldGetFirmwareUpdate',
-                'location',
-                'shutdownTerminal',
-                'tz',
-                'time_format']
-            for p in list_of_params_to_include_in_answer:
+            params_in_answer = keys_routine_call + display_messages
+            for p in params_in_answer:
                 answer[p] = ras2_Dict.get(p)
 
             answer['rfid_codes_to_names'] = EmployeeModel.sudo().get_rfid_codes_with_names()['rfid_codes_to_names']

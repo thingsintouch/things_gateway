@@ -1,10 +1,16 @@
 from odoo import http, fields
 import time
+from datetime import datetime
 import json
 from . import routine
 import logging
 
 _logger = logging.getLogger(__name__)
+
+display_messages = [
+    "card_registered",
+    "too_little_time_between_clockings"
+  ]
 
 factory_settings = [
   "firmwareAtShipment",
@@ -82,7 +88,7 @@ class ThingsRasGate(http.Controller):
         answer = {"error": None}
         try:
             data = http.request.jsonrequest
-            _logger.info(f'data: {data}') ##############
+            _logger.info('data: {}'.format(data)) ##############
 
             question = data.get('question', None)
             if "Please" in question:
@@ -92,9 +98,9 @@ class ThingsRasGate(http.Controller):
                 answer["version"]= None
                 _logger.error('someone is asking the wrong question (Get Module Version of ThingsRasGate Class)')
         except Exception as e:
-            _logger.info(f'Get Module Version of ThingsRasGate Class - Exception {e}')
+            _logger.info('Get Module Version of ThingsRasGate Class - Exception {}'.format(e))
             answer["error"] = e
-        _logger.info(f'answer to Get Module Version of ThingsRasGate Class: {answer}') ################
+        _logger.info('answer to Get Module Version of ThingsRasGate Class: {}'.format(answer)) ################
         return answer
 
     @http.route('/things/gates/ras/ack',
@@ -108,19 +114,19 @@ class ThingsRasGate(http.Controller):
         def get_data_coming_from_terminal():
             data_to_transfer ={}
             for o in keys_defined_in_device:
-                _logger.info(f'get data to transfer - key {o}')
+                _logger.info('get data to transfer - key {}'.format(o))
                 data_to_transfer[o] = data.get(o)
             data_to_transfer['lastConnectionOdooTerminal'] = str(fields.Datetime.now())
-            _logger.info(f'data to transfer {data_to_transfer}')        
+            _logger.info('data to transfer {}'.format(data_to_transfer))        
             return data_to_transfer
 
 
         answer = {"error": None}
         try:
             data = http.request.jsonrequest
-            #_logger.info(f'data: {data}')
+            #_logger.info('data: {}'.format(data))
             hashed_machine_id = data.get('hashed_machine_id', None)
-            _logger.info(f'hashed_machine_id: {hashed_machine_id}')
+            _logger.info('hashed_machine_id: {}'.format(hashed_machine_id))
 
             Ras2Model = http.request.env['things.ras2']
 
@@ -138,15 +144,15 @@ class ThingsRasGate(http.Controller):
             ras2_Dict = ras2_to_be_acknowledged.sudo().read()[0]
 
             for p in all_keys:
-                _logger.info(f'key {p}')
+                _logger.info('key {}'.format(p))
                 answer[p] = ras2_Dict.get(p)
 
             answer["terminalIDinOdoo"] = str(ras2_to_be_acknowledged.id)
 
         except Exception as e:
-            _logger.info(f'the new gate request could not be dispatched - Exception {e}')
+            _logger.info('the new gate request could not be dispatched - Exception {}'.format(e))
             answer["error"] = e
-        _logger.info(f'answer to request to acknowledge RAS: {answer} ')
+        _logger.info('answer to request to acknowledge RAS: {} '.format(answer))
         return answer
 
     def resetSettings(self,routeFrom, answer):
@@ -163,13 +169,96 @@ class ThingsRasGate(http.Controller):
                 })
             else:
                 answer["error"] = "This should never occur. Method resetSettings"
-                _logger.info(f'resetSettings RAS - Error: {answer["error"]} ')
+                _logger.info('resetSettings RAS - Error: {} '.format(answer["error"]))
         except Exception as e:
-            _logger.info(f'resetSettings RAS - Exception {e}')
+            _logger.info('resetSettings RAS - Exception {}'.format(e))
             answer["error"] = e
 
-        _logger.info(f'resetSettings RAS: {answer} ')
+        _logger.info('resetSettings RAS: {}'.format(answer))
         return answer
+
+    def registerSingleton(self, card, timestamp_str, source):
+
+        def getEmployeeID(card):
+            EmployeeModel = http.request.env['hr.employee']
+            employee_id = EmployeeModel.sudo().search([('rfid_card_code', '=', card)], limit=1)
+            if employee_id:
+                _logger.debug("employee with card {} found:".format(card))
+                return employee_id
+            else:
+                _logger.warning("No employee found with card {}".format(card))
+                return None
+
+
+        employee_id = getEmployeeID(card)
+
+        if employee_id is None:
+            return False
+        else:
+            attendanceModel = http.request.env['hr.attendance']
+
+            result = attendanceModel.add_clocking(  employee_id,
+                                                    timestamp_str,
+                                                    checkin_or_checkout="not_defined",
+                                                    source=source)
+
+            if result == "all OK":
+                return True
+            elif "Timestamp is already registered" in result:
+                _logger.warning("Could not add clocking, Timestamp is already registered")
+                return True
+            elif "days in the past" in result:
+                _logger.warning("Would not add clocking, Timestamp is too old")
+                return False
+
+        return False
+
+
+
+    def registerClockings(self,routeFrom, data, answer):
+
+        def getSource(routeFrom):
+            Ras2Model = http.request.env['things.ras2']
+            ras2_in_database = Ras2Model.sudo().search(
+                [('routefromDeviceToOdoo', '=', routeFrom)])
+            if ras2_in_database:
+                return str(ras2_in_database.id)
+            else:
+                return "xxx"
+
+        answer['processed_clockings']=[]
+        try:
+            source = getSource(routeFrom)
+            _logger.info('################# ---- register clockings ---- ##############')
+            _logger.info('################# ---- register clockings ---- ##############')
+            # timestamp =  fields.Datetime.now() #.strftime("%Y-%m-%d %H:%M:%S")
+            # tzNAME = "dede" #fields.Datetime.now().tzname()
+            # _logger.info('timestamp_now {} . tz name {}'.format(timestamp, tzNAME))
+            #_logger.info('registerClockings - data {}'.format(data))
+            for c in data.get('clockings',[]):
+                [card, timestamp_in_seconds] = c.split('-')
+                timestamp_datetime = datetime.fromtimestamp(int(timestamp_in_seconds))
+                timestamp_str = timestamp_datetime.isoformat(' ')
+                #timestamp_localtime = time.localtime(int(timestamp_in_seconds))
+                _logger.info('registerClockings - card {} - timestamp_str {}'.format(card,timestamp_str))
+                if self.registerSingleton(card, timestamp_str, source):
+                    _logger.info('SUCCESS ----')
+                    answer['processed_clockings'].append(c)
+                else:
+                    _logger.info('FAILED xxxxx')             
+            _logger.info('################# ---- register clockings ---- ##############')
+            _logger.info('################# ---- register clockings ---- ##############')
+        except Exception as e:
+            _logger.info('registerClockings - Exception {}'.format(e))
+            answer["error"] = e
+        _logger.info('registerClockings : {}'.format(answer))
+        return answer
+
+
+    def get_productCategory(self,data):
+        productName = data.get('productName', None)
+        #_logger.debug('productName {}'.format(productName))
+        return productName[0:3]        
 
     @http.route('/things/gates/ras/incoming/<routeFrom>',
             type = 'json',
@@ -179,14 +268,20 @@ class ThingsRasGate(http.Controller):
     def messageFromGate(self, routeFrom, **kwargs):
         answer = {"error": None}
         try:
-            data = http.request.jsonrequest
-            productName = data.get('productName', None)
-            question = data.get('question', None)
+            data                = http.request.jsonrequest
 
-            if productName == "RAS2" and question == "Reset":
+            productCategory     = self.get_productCategory(data)
+            question            = data.get('question', None)
+
+            if  productCategory == "RAS"        and  \
+                question        == "RegisterClockings":
+                answer = self.registerClockings(routeFrom, data, answer)            
+
+            if  productCategory == "RAS"        and  \
+                question        == "Reset":
                 answer = self.resetSettings(routeFrom, answer)
         except Exception as e:
-            _logger.info(f'Message from Odoo To Gate could not be dispatched - Exception {e}')
+            _logger.info('Message from Odoo To Gate could not be dispatched - Exception {}'.format(e))
             answer["error"] = e
 
         return answer
@@ -199,14 +294,17 @@ class ThingsRasGate(http.Controller):
     def messageToGate(self, routeTo, **kwargs):
         answer = {"error": None}
         try:
-            data = http.request.jsonrequest
-            productName = data.get('productName', None)
-            question = data.get('question', None)
-            _logger.info(f'productName {productName} - question {question}')
-            if productName == "RAS2.1" and question == "Routine":
+            data                = http.request.jsonrequest
+
+            productCategory     = self.get_productCategory(data)
+            question            = data.get('question', None)
+
+            if  productCategory == "RAS"        and  \
+                question        == "Routine":
                 answer = routine.answerRas2routineQuestion(routeTo, data, answer)
+
         except Exception as e:
-            _logger.info(f'Message from Odoo To Gate could not be dispatched - Exception {e}')
+            _logger.info('Message from Odoo To Gate could not be dispatched - Exception {}'.format(answer))
             answer["error"] = e
-        _logger.info(f'Answer from Odoo To Gate  {answer}')
+        #_logger.debug('Answer from Odoo To Gate  {answer}'.format(answer))
         return answer

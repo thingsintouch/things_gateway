@@ -101,7 +101,7 @@ class ThingsRAS2(models.Model):
         help="In which language should the terminal show the messages?")
     tz = fields.Selection(
         _tz_get, string='Timezone', required=True,
-        default=lambda self: self._context.get('tz') or self.env.user.tz or 'Europe/Madrid',
+        default=lambda self: self._context.get('tz') or self.env.user.tz or 'Europe/Berlin',
         help="In which timezone the Device will display time.")
     time_format = fields.Selection(
         [("12 hour","12 hour"),("24 hour","24 hour")],
@@ -174,7 +174,14 @@ class ThingsRAS2(models.Model):
 
     incrementalLog = fields.Text('Last Log Entries', readonly = True)
 
-    # messages for display!!!
+    # messages for display
+
+    card_registered = fields.Char("card is registered for async clocking",
+        default = "Registered",
+        help = "Text to show on Display when card is registered for async clocking")
+    too_little_time_between_clockings = fields.Char("card is not registered (too soon)",
+        default = "Too Soon",
+        help = "Text to show on Display when card is not registered for async clocking because there was too little time between card swipes")
 
 
     
