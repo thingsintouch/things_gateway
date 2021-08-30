@@ -119,7 +119,22 @@ class ThingsRasGate(http.Controller):
             data_to_transfer['lastConnectionOdooTerminal'] = str(fields.Datetime.now())
             _logger.info('data to transfer {}'.format(data_to_transfer))        
             return data_to_transfer
-
+        def getRASxxx(RAS_id):
+            RAS_id_str ="xxx"
+            try:
+                if RAS_id:
+                    RAS_id_str = str(RAS_id)
+                    if len(RAS_id_str)==1:
+                        RAS_id_str = "00" + RAS_id_str
+                    elif len(RAS_id_str)==2:
+                        RAS_id_str = "0" + RAS_id_str
+                    elif len(RAS_id_str)>3:
+                        RAS_id_str = RAS_id_str[-3:]
+                _logger.info("RAS_id_str: {}".format(RAS_id_str))
+            except Exception as e:
+                _logger.info("Exception in getRASxxx: {}".format(e))
+                
+            return RAS_id_str
 
         answer = {"error": None}
         try:
@@ -148,6 +163,9 @@ class ThingsRasGate(http.Controller):
                 answer[p] = ras2_Dict.get(p)
 
             answer["terminalIDinOdoo"] = str(ras2_to_be_acknowledged.id)
+            RASxxx = "RAS-"+getRASxxx(ras2_to_be_acknowledged.id)
+            answer['RASxxx'] = RASxxx
+            ras2_to_be_acknowledged.sudo().write({'RASxxx': RASxxx})
 
         except Exception as e:
             _logger.info('the new gate request could not be dispatched - Exception {}'.format(e))
@@ -199,7 +217,7 @@ class ThingsRasGate(http.Controller):
 
             result = attendanceModel.add_clocking(  employee_id,
                                                     timestamp_str,
-                                                    checkin_or_checkout="not_defined",
+                                                    #checkin_or_checkout="not_defined",
                                                     source=source)
 
             if result == "all OK":
@@ -212,8 +230,6 @@ class ThingsRasGate(http.Controller):
                 return False
 
         return False
-
-
 
     def registerClockings(self,routeFrom, data, answer):
 
@@ -253,7 +269,6 @@ class ThingsRasGate(http.Controller):
             answer["error"] = e
         _logger.info('registerClockings : {}'.format(answer))
         return answer
-
 
     def get_productCategory(self,data):
         productName = data.get('productName', None)

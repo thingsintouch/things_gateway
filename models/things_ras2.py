@@ -37,22 +37,7 @@ class ThingsRAS2(models.Model):
 
   # UPDATED_FROM_ODOO_ONLY_ON_START ###############################################
 
-    #terminalIDinOdoo = fields.Char(readonly = True, default="23")
-
-    # >>>>>>>>>>>> terminalIDinOdoo is the id ####################################
-    # def generate_RASxxx(self):
-    #     #self.terminalIDinOdoo = str(self.id)
-    #     RAS_id_str = str(self.id)
-    #     if len(RAS_id_str)==1:
-    #         RAS_id_str = "00" + RAS_id_str
-    #     elif len(RAS_id_str)==2:
-    #         RAS_id_str = "0" + RAS_id_str
-    #     elif len(RAS_id_str)>3:
-    #         RAS_id_str = RAS_id_str[-3:]
-    #     _logger.info(f'RASxxx: {RAS_id_str}')
-    #     return "RAS-" + RAS_id_str
-
-    RASxxx = fields.Char(
+    RASxxx = fields.Char("Name",
         default= "not defined",
         required=True)
 

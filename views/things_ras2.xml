@@ -6,7 +6,7 @@
         <field name="name">RAS2 Form</field>
         <field name="model">things.ras2</field>
         <field name="arch" type="xml">
-        <form>
+        <form create="false">
             <group>
                 <group>
                     <field name="productName"/>
@@ -42,6 +42,7 @@
         <field name="model">things.ras2</field>
         <field name="arch" type="xml">
             <tree>
+                <field name="RASxxx"/>
                 <field name="productName"/>
                 <field name="location"/>
                 <field name="firmwareVersion"/>
@@ -56,6 +57,7 @@
         <field name="model">things.ras2</field>
         <field name="arch" type="xml">
             <search>
+                <field name="RASxxx"/>
                 <field name="productName"/>
                 <field name="location"/>
             </search>
