@@ -6,13 +6,13 @@
     />
 
     <act_window id="things_ras2_action" 
-        name="RAS2 Terminals"
+        name="Attendance Terminals"
         res_model="things.ras2"
         view_mode = "tree,form"
     />
 
     <menuitem id="things_menu_ras2"
-        name="RAS2 Terminals"
+        name="Attendance Terminals"
         action="things_ras2_action" 
         parent="things_menu_root"
     />

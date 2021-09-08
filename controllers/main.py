@@ -20,7 +20,8 @@ factory_settings = [
   "productionNumber",
   "qualityInspector",
   "SSIDreset",
-  "hashed_machine_id"]
+  "hashed_machine_id",
+  "setup_password"]
 
 defined_on_ack_from_odoo = [
   #"terminalIDinOdoo",
@@ -28,14 +29,15 @@ defined_on_ack_from_odoo = [
   "routefromDeviceToOdoo",
   "routefromOdooToDevice",
   "version_things_module_in_Odoo",
-  "ownIpAddress"]
+  "setup_password"]
 
 defined_on_ack_from_device = [
-  #"installedPythonModules",
   "firmwareVersion",
   "lastFirmwareUpdateTime",
   "lastTimeTerminalStarted",
-  "updateFailedCount"]
+  "updateFailedCount",
+  "ownIpAddress",
+  "setup_password"]
 
 keys_routine_calls = [
   "ssh",
@@ -58,7 +60,11 @@ keys_routine_calls = [
   "updateOTAcommand" ,
   "doFactoryReset",
   "updateAvailable",
-  "lastConnectionOdooTerminal"]
+  "lastConnectionOdooTerminal",
+  "minimumTimeBetweenClockings", # in seconds
+  "period_odoo_routine_check", # in seconds
+  "setup_password"
+  ]
 
 defined_on_device_setup = [
   "https",
@@ -119,6 +125,7 @@ class ThingsRasGate(http.Controller):
             data_to_transfer['lastConnectionOdooTerminal'] = str(fields.Datetime.now())
             _logger.info('data to transfer {}'.format(data_to_transfer))        
             return data_to_transfer
+
         def getRASxxx(RAS_id):
             RAS_id_str ="xxx"
             try:
@@ -137,9 +144,10 @@ class ThingsRasGate(http.Controller):
             return RAS_id_str
 
         answer = {"error": None}
+        _logger.debug('############### - ACK - ##############')
         try:
             data = http.request.jsonrequest
-            #_logger.info('data: {}'.format(data))
+            _logger.info('data: {}'.format(data))
             hashed_machine_id = data.get('hashed_machine_id', None)
             _logger.info('hashed_machine_id: {}'.format(hashed_machine_id))
 
@@ -159,13 +167,19 @@ class ThingsRasGate(http.Controller):
             ras2_Dict = ras2_to_be_acknowledged.sudo().read()[0]
 
             for p in all_keys:
-                _logger.info('key {}'.format(p))
+                _logger.info('----> key {}'.format(p))
                 answer[p] = ras2_Dict.get(p)
 
             answer["terminalIDinOdoo"] = str(ras2_to_be_acknowledged.id)
             RASxxx = "RAS-"+getRASxxx(ras2_to_be_acknowledged.id)
             answer['RASxxx'] = RASxxx
-            ras2_to_be_acknowledged.sudo().write({'RASxxx': RASxxx})
+            inc_log =  data.get('incrementalLog', '')
+            ras2_to_be_acknowledged.sudo().write({
+                'RASxxx': RASxxx,
+                'incrementalLog': inc_log,
+                "shouldGetFirmwareUpdate": False,
+                "shutdownTerminal": False
+                })
 
         except Exception as e:
             _logger.info('the new gate request could not be dispatched - Exception {}'.format(e))
@@ -201,10 +215,10 @@ class ThingsRasGate(http.Controller):
             EmployeeModel = http.request.env['hr.employee']
             employee_id = EmployeeModel.sudo().search([('rfid_card_code', '=', card)], limit=1)
             if employee_id:
-                _logger.debug("employee with card {} found:".format(card))
+                #_logger.debug("employee with card {} found:".format(card))
                 return employee_id
             else:
-                _logger.warning("No employee found with card {}".format(card))
+                #_logger.warning("No employee found with card {}".format(card))
                 return None
 
 
@@ -223,10 +237,10 @@ class ThingsRasGate(http.Controller):
             if result == "all OK":
                 return True
             elif "Timestamp is already registered" in result:
-                _logger.warning("Could not add clocking, Timestamp is already registered")
+                #_logger.warning("Could not add clocking, Timestamp is already registered")
                 return True
             elif "days in the past" in result:
-                _logger.warning("Would not add clocking, Timestamp is too old")
+                #_logger.warning("Would not add clocking, Timestamp is too old")
                 return False
 
         return False
@@ -245,8 +259,8 @@ class ThingsRasGate(http.Controller):
         answer['processed_clockings']=[]
         try:
             source = getSource(routeFrom)
-            _logger.info('################# ---- register clockings ---- ##############')
-            _logger.info('################# ---- register clockings ---- ##############')
+            #_logger.info('################# ---- register clockings ---- ##############')
+            #_logger.info('################# ---- register clockings ---- ##############')
             # timestamp =  fields.Datetime.now() #.strftime("%Y-%m-%d %H:%M:%S")
             # tzNAME = "dede" #fields.Datetime.now().tzname()
             # _logger.info('timestamp_now {} . tz name {}'.format(timestamp, tzNAME))
@@ -256,18 +270,19 @@ class ThingsRasGate(http.Controller):
                 timestamp_datetime = datetime.fromtimestamp(int(timestamp_in_seconds))
                 timestamp_str = timestamp_datetime.isoformat(' ')
                 #timestamp_localtime = time.localtime(int(timestamp_in_seconds))
-                _logger.info('registerClockings - card {} - timestamp_str {}'.format(card,timestamp_str))
+                #_logger.info('registerClockings - card {} - timestamp_str {}'.format(card,timestamp_str))
                 if self.registerSingleton(card, timestamp_str, source):
-                    _logger.info('SUCCESS ----')
+                    #_logger.info('SUCCESS ----')
                     answer['processed_clockings'].append(c)
                 else:
-                    _logger.info('FAILED xxxxx')             
-            _logger.info('################# ---- register clockings ---- ##############')
-            _logger.info('################# ---- register clockings ---- ##############')
+                    #_logger.info('FAILED xxxxx')
+                    pass             
+            #_logger.info('################# ---- register clockings ---- ##############')
+            #_logger.info('################# ---- register clockings ---- ##############')
         except Exception as e:
             _logger.info('registerClockings - Exception {}'.format(e))
             answer["error"] = e
-        _logger.info('registerClockings : {}'.format(answer))
+        #_logger.info('registerClockings : {}'.format(answer))
         return answer
 
     def get_productCategory(self,data):

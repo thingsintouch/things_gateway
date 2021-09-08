@@ -16,7 +16,11 @@ keys_routine_call = [
     'location',
     'shutdownTerminal',
     'tz',
-    'time_format'
+    'time_format',
+    "minimumTimeBetweenClockings", # in seconds
+    "period_odoo_routine_check", # in seconds
+    "timeToDisplayResultAfterClocking",
+    "setup_password"
     ]
 
 def answerRas2routineQuestion(routeTo, data, answer):
@@ -32,18 +36,18 @@ def answerRas2routineQuestion(routeTo, data, answer):
                 'lastConnectionOdooTerminal': fields.Datetime.now()
                 })
             incrementalLog_received = data.get('incrementalLog', False)
-            _logger.info(f'incrementalLog_received_str {incrementalLog_received} ')
+            _logger.info('incrementalLog_received_str {}'.format(incrementalLog_received))
             if incrementalLog_received:
-                incrementalLog_received += "\n"               
+                # incrementalLog_received += "\n"               
                 incrementalLog_stored = ras2_Dict['incrementalLog'] or " "
                 log_length = len(incrementalLog_stored)
                 _logger.info(f'Length of incremental log in storage {log_length} ')
-                if log_length > 10000:
-                    incrementalLog_capped = incrementalLog_stored[-3000:]
+                if log_length > 50000:
+                    incrementalLog_capped = incrementalLog_stored[:45000]
                 else:
                     incrementalLog_capped = incrementalLog_stored
 
-                new_inc_log = incrementalLog_capped + incrementalLog_received
+                new_inc_log = incrementalLog_received + incrementalLog_capped
                 ras2_in_database.sudo().write({
                         'incrementalLog' : new_inc_log,               
                 })
@@ -51,6 +55,11 @@ def answerRas2routineQuestion(routeTo, data, answer):
             params_in_answer = keys_routine_call + display_messages
             for p in params_in_answer:
                 answer[p] = ras2_Dict.get(p)
+
+            ras2_in_database.sudo().write({
+                "shouldGetFirmwareUpdate": False,
+                "shutdownTerminal": False               
+                })            
 
             answer['rfid_codes_to_names'] = EmployeeModel.sudo().get_rfid_codes_with_names()['rfid_codes_to_names']
         else:

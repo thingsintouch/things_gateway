@@ -106,7 +106,7 @@ class ThingsRAS2(models.Model):
         required=True,
         default= 10.0,
         help="Time between refreshes of the clock display [s]")   
-    timeToDisplayResultAfterClocking = fields.Float(string='Time Result Of Clocking [s]',
+    timeToDisplayResultAfterClocking = fields.Float(string='How Long Display Text shown [s]',
         required=True,
         default= 1.2,
         help="How Long will the Display show the Result after Clocking [s]")   
@@ -114,14 +114,14 @@ class ThingsRAS2(models.Model):
         required=True,
         default= "to be defined",
         help="Where is the Terminal located?")
-    shouldGetFirmwareUpdate = fields.Boolean("Update Firmware",
+    shouldGetFirmwareUpdate = fields.Boolean("Update Firmware and Reboot (now)",
         required=True,
         default= False,
         help = "Update the firmware after rebooting")
-    setRebootAt = fields.Datetime('Reboot Time',
+    setRebootAt = fields.Datetime('Reboot once the Terminal at this Time',
         help = 'Time when the Terminal will be rebooted',
         default = None)
-    shutdownTerminal = fields.Boolean("Shutdown",
+    shutdownTerminal = fields.Boolean("Shutdown (Turn Off the Terminal)",
         help = "Shutdown the Terminal immediately",
         default = False)
     isRemoteOdooControlAvailable = fields.Boolean(readonly = True)  
@@ -141,6 +141,14 @@ class ThingsRAS2(models.Model):
         help = "Timestamp of the last successful connection between the Device and Odoo",
         default = None,
         readonly = True)
+    minimumTimeBetweenClockings = fields.Integer(string='Minimum Time between Clockings [s]',
+        required=True,
+        default= 300,
+        help="How long is clocking again blocked [s]")
+    period_odoo_routine_check =  fields.Integer(string='Time between Routine checks [s]',
+        required=True,
+        default= 12,
+        help="How long between every information exchange between Terminal RAS and Odoo [s]")
 
   # UPDATED_FROM_DEVICE: Updates are done through the Firmware #############################
     installedPythonModules = fields.Char("Installed Python Modules",
@@ -158,15 +166,18 @@ class ThingsRAS2(models.Model):
         readonly = True)
 
     incrementalLog = fields.Text('Last Log Entries', readonly = True)
+    lastLogMessage = fields.Integer('Last Log Line Received', default = 0, readonly = True)
 
     # messages for display
 
-    card_registered = fields.Char("card is registered for async clocking",
+    card_registered = fields.Char("Text Display for 'clocking registered'",
         default = "Registered",
         help = "Text to show on Display when card is registered for async clocking")
-    too_little_time_between_clockings = fields.Char("card is not registered (too soon)",
+    too_little_time_between_clockings = fields.Char("Text Display for 'too little time between clockings'",
         default = "Too Soon",
         help = "Text to show on Display when card is not registered for async clocking because there was too little time between card swipes")
 
+    setup_password = fields.Char("Setup Password (Terminal)",
+        help = "Password needed to introduce new Parameters (SSID, Odoo URL) during the Setup of the Terminal")
 
     
