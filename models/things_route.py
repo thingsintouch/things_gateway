@@ -1,3 +1,5 @@
+# Copyright 2021 thingsintouch.com
+
 from odoo import models, fields
 from uuid import uuid4
 

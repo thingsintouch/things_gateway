@@ -1,3 +1,5 @@
+# Copyright 2021 thingsintouch.com
+
 from odoo import http, fields
 import time
 import logging
@@ -36,12 +38,12 @@ def answerRas2routineQuestion(routeTo, data, answer):
                 'lastConnectionOdooTerminal': fields.Datetime.now()
                 })
             incrementalLog_received = data.get('incrementalLog', False)
-            _logger.info('incrementalLog_received_str {}'.format(incrementalLog_received))
+            # _logger.info('incrementalLog_received_str {}'.format(incrementalLog_received))
             if incrementalLog_received:
                 # incrementalLog_received += "\n"               
                 incrementalLog_stored = ras2_Dict['incrementalLog'] or " "
                 log_length = len(incrementalLog_stored)
-                _logger.info(f'Length of incremental log in storage {log_length} ')
+                # _logger.info(f'Length of incremental log in storage {log_length} ')
                 if log_length > 50000:
                     incrementalLog_capped = incrementalLog_stored[:45000]
                 else:

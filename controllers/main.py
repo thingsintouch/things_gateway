@@ -1,3 +1,5 @@
+# Copyright 2021 thingsintouch.com
+
 from odoo import http, fields
 import time
 from datetime import datetime
@@ -24,8 +26,6 @@ factory_settings = [
   "setup_password"]
 
 defined_on_ack_from_odoo = [
-  #"terminalIDinOdoo",
-  #"RASxxx",
   "routefromDeviceToOdoo",
   "routefromOdooToDevice",
   "version_things_module_in_Odoo",
@@ -94,11 +94,11 @@ class ThingsRasGate(http.Controller):
         answer = {"error": None}
         try:
             data = http.request.jsonrequest
-            _logger.info('data: {}'.format(data)) ##############
+            #_logger.info('data: {}'.format(data)) ##############
 
             question = data.get('question', None)
             if "Please" in question:
-                answer["version"]= "12.0.2" # version of this things module as in __manifest__.py
+                answer["version"]= "11.0.5.0.210910" # version of this things module as in __manifest__.py
             else:
                 answer["error"]="Wrong question"
                 answer["version"]= None
@@ -120,10 +120,10 @@ class ThingsRasGate(http.Controller):
         def get_data_coming_from_terminal():
             data_to_transfer ={}
             for o in keys_defined_in_device:
-                _logger.info('get data to transfer - key {}'.format(o))
+                # _logger.info('get data to transfer - key {}'.format(o))
                 data_to_transfer[o] = data.get(o)
             data_to_transfer['lastConnectionOdooTerminal'] = str(fields.Datetime.now())
-            _logger.info('data to transfer {}'.format(data_to_transfer))        
+            # _logger.info('data to transfer {}'.format(data_to_transfer))        
             return data_to_transfer
 
         def getRASxxx(RAS_id):
@@ -137,19 +137,19 @@ class ThingsRasGate(http.Controller):
                         RAS_id_str = "0" + RAS_id_str
                     elif len(RAS_id_str)>3:
                         RAS_id_str = RAS_id_str[-3:]
-                _logger.info("RAS_id_str: {}".format(RAS_id_str))
+                # _logger.info("RAS_id_str: {}".format(RAS_id_str))
             except Exception as e:
                 _logger.info("Exception in getRASxxx: {}".format(e))
                 
             return RAS_id_str
 
         answer = {"error": None}
-        _logger.debug('############### - ACK - ##############')
+        # _logger.debug('############### - ACK - ##############')
         try:
             data = http.request.jsonrequest
-            _logger.info('data: {}'.format(data))
+            # _logger.info('data: {}'.format(data))
             hashed_machine_id = data.get('hashed_machine_id', None)
-            _logger.info('hashed_machine_id: {}'.format(hashed_machine_id))
+            # _logger.info('hashed_machine_id: {}'.format(hashed_machine_id))
 
             Ras2Model = http.request.env['things.ras2']
 
@@ -167,7 +167,7 @@ class ThingsRasGate(http.Controller):
             ras2_Dict = ras2_to_be_acknowledged.sudo().read()[0]
 
             for p in all_keys:
-                _logger.info('----> key {}'.format(p))
+                # _logger.info('----> key {}'.format(p))
                 answer[p] = ras2_Dict.get(p)
 
             answer["terminalIDinOdoo"] = str(ras2_to_be_acknowledged.id)
@@ -184,7 +184,7 @@ class ThingsRasGate(http.Controller):
         except Exception as e:
             _logger.info('the new gate request could not be dispatched - Exception {}'.format(e))
             answer["error"] = e
-        _logger.info('answer to request to acknowledge RAS: {} '.format(answer))
+        # _logger.info('answer to request to acknowledge RAS: {} '.format(answer))
         return answer
 
     def resetSettings(self,routeFrom, answer):
@@ -201,12 +201,12 @@ class ThingsRasGate(http.Controller):
                 })
             else:
                 answer["error"] = "This should never occur. Method resetSettings"
-                _logger.info('resetSettings RAS - Error: {} '.format(answer["error"]))
+                # _logger.info('resetSettings RAS - Error: {} '.format(answer["error"]))
         except Exception as e:
             _logger.info('resetSettings RAS - Exception {}'.format(e))
             answer["error"] = e
 
-        _logger.info('resetSettings RAS: {}'.format(answer))
+        # _logger.info('resetSettings RAS: {}'.format(answer))
         return answer
 
     def registerSingleton(self, card, timestamp_str, source):
