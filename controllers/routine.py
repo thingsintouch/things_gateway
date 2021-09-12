@@ -43,7 +43,7 @@ def answerRas2routineQuestion(routeTo, data, answer):
                 # incrementalLog_received += "\n"               
                 incrementalLog_stored = ras2_Dict['incrementalLog'] or " "
                 log_length = len(incrementalLog_stored)
-                # _logger.info(f'Length of incremental log in storage {log_length} ')
+                # _logger.info('Length of incremental log in storage {}'.format(log_length))
                 if log_length > 50000:
                     incrementalLog_capped = incrementalLog_stored[:45000]
                 else:
@@ -66,10 +66,10 @@ def answerRas2routineQuestion(routeTo, data, answer):
             answer['rfid_codes_to_names'] = EmployeeModel.sudo().get_rfid_codes_with_names()['rfid_codes_to_names']
         else:
             answer["error"] = "This should never occur. Method answerRasroutineQuestion"
-            _logger.info(f'Routine Question RAS - Error: {answer["error"]} ')
+            _logger.info('Routine Question RAS - Error: {}'.format(answer["error"]))
     except Exception as e:
-        _logger.info(f'Routine Question RAS - Exception {e}')
+        _logger.info('Routine Question RAS - Exception {}'.format(e))
         answer["error"] = e
 
-    _logger.debug(f'answer to routine Question RAS: {answer} ')
+    _logger.debug('answer to routine Question RAS: {}'.format(answer))
     return answer
