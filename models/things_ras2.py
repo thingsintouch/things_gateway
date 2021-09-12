@@ -2,8 +2,8 @@
 
 from odoo import models, fields
 from uuid import uuid4
-from odoo.addons.base.res.res_partner import _tz_get
-#from odoo.addons.base.models.res_partner import _tz_get # >= odoo 12.0
+# from odoo.addons.base.res.res_partner import _tz_get
+from odoo.addons.base.models.res_partner import _tz_get # >= odoo 12.0
 import logging
 _logger = logging.getLogger(__name__)
 
