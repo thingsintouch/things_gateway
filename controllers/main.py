@@ -94,7 +94,7 @@ class ThingsRasGate(http.Controller):
         answer = {"error": None}
         try:
             data = http.request.jsonrequest
-            #_logger.info('data: {}'.format(data)) ##############
+            _logger.info('#### MODULE VERSION : data: {}'.format(data)) ##############
 
             question = data.get('question', None)
             if "Please" in question:
@@ -144,10 +144,10 @@ class ThingsRasGate(http.Controller):
             return RAS_id_str
 
         answer = {"error": None}
-        # _logger.debug('############### - ACK - ##############')
+        _logger.info('############### - ACK - ##############')
         try:
             data = http.request.jsonrequest
-            # _logger.info('data: {}'.format(data))
+            _logger.info('ACK -- data: {}'.format(data))
             hashed_machine_id = data.get('hashed_machine_id', None)
             # _logger.info('hashed_machine_id: {}'.format(hashed_machine_id))
 
