@@ -3,7 +3,7 @@
     'summary': "Connect your Gateways with Odoo",       
     'description': """Manage the Gateways of Things in Touch""",
 
-    'version': '11.0.5.0.211024', # update controllers.main.ThingsRasGate
+    'version': '10.0.5.0.211027', # update controllers.main.ThingsRasGate
     'category': 'Things',
     'website': "https://thingsintouch.com",
     'images': [
