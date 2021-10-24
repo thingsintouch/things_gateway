@@ -1,9 +1,10 @@
 # Copyright 2021 thingsintouch.com
 
 from odoo import http, fields
-import time
+#import time
 import logging
 import json
+from datetime import datetime
 
 _logger = logging.getLogger(__name__)
 
@@ -61,9 +62,14 @@ def answerRas2routineQuestion(routeTo, data, answer):
             ras2_in_database.sudo().write({
                 "shouldGetFirmwareUpdate": False,
                 "shutdownTerminal": False               
-                })            
+                })
 
             answer['rfid_codes_to_names'] = EmployeeModel.sudo().get_rfid_codes_with_names()['rfid_codes_to_names']
+
+            utc_now_on_odoo_server =datetime.utcnow()
+            utc_now_as_str = utc_now_on_odoo_server.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
+            # _logger.info('Routine Question RAS - utc now_on_odoo_server: {}'.format(utc_now_as_str))
+            answer['odoo_server_utc_timestamp'] = utc_now_as_str
         else:
             answer["error"] = "This should never occur. Method answerRasroutineQuestion"
             _logger.info('Routine Question RAS - Error: {}'.format(answer["error"]))
