@@ -98,7 +98,7 @@ class ThingsRasGate(http.Controller):
 
             question = data.get('question', None)
             if "Please" in question:
-                answer["version"]= "11.0.5.0.210910" # version of this things module as in __manifest__.py
+                answer["version"]= "14.0.5.0.211101" # version of this things module as in __manifest__.py
             else:
                 answer["error"]="Wrong question"
                 answer["version"]= None
@@ -231,8 +231,8 @@ class ThingsRasGate(http.Controller):
 
             result = attendanceModel.add_clocking(  employee_id,
                                                     timestamp_str,
-                                                    #checkin_or_checkout="not_defined",
-                                                    source=source)
+                                                    True,
+                                                    source)
 
             if result == "all OK":
                 return True
