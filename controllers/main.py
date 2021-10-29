@@ -98,7 +98,7 @@ class ThingsRasGate(http.Controller):
 
             question = data.get('question', None)
             if "Please" in question:
-                answer["version"]= "10.0.5.0.211027" # version of this things module as in __manifest__.py
+                answer["version"]= "11.0.5.0.211029" # version of this things module as in __manifest__.py
             else:
                 answer["error"]="Wrong question"
                 answer["version"]= None
